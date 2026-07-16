@@ -108,6 +108,26 @@ async function measureLatency () {
   if (times.length) latency.value = Math.round(Math.min(...times))
 }
 
+// ¿Es una dirección REALMENTE privada/local (LAN)? En IPv6 no hay NAT: la
+// dirección global (2000::/3) es pública y ya se muestra arriba — aquí solo
+// interesan las privadas: IPv4 RFC1918/link-local/loopback e IPv6 link-local
+// (fe80::/10), ULA (fc00::/7) y loopback.
+function isPrivateAddr (addr) {
+  if (addr.includes(':')) {
+    const a = addr.toLowerCase()
+    if (a === '::1') return true
+    if (/^fe[89ab]/.test(a)) return true              // fe80::/10 link-local
+    if (/^f[cd]/.test(a)) return true                 // fc00::/7 ULA
+    return false                                       // global (pública) → fuera
+  }
+  const p = addr.split('.').map(Number)
+  return p[0] === 10 ||
+    p[0] === 127 ||
+    (p[0] === 192 && p[1] === 168) ||
+    (p[0] === 172 && p[1] >= 16 && p[1] <= 31) ||
+    (p[0] === 169 && p[1] === 254)                     // link-local
+}
+
 // ---------- IP local (WebRTC, solo candidatos host; SIN STUN → sin terceros) ----------
 async function detectLocal () {
   detectingLocal.value = true
@@ -124,7 +144,8 @@ async function detectLocal () {
       const addr = m && m[1]
       if (!addr) return
       if (/\.local$/i.test(addr) || /\.local$/i.test(cand)) { masked = true; return }
-      if (addr && addr !== '0.0.0.0') found.add(addr)
+      // Solo direcciones privadas (LAN): la IPv6 global es pública, no "local".
+      if (addr && addr !== '0.0.0.0' && isPrivateAddr(addr)) found.add(addr)
     }
     await pc.setLocalDescription(await pc.createOffer())
     await new Promise((r) => setTimeout(r, 1200))
