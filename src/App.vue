@@ -6,18 +6,27 @@ import iconUrl from '/icon.svg'
 // ---------- estado ----------
 const trace = ref(null)      // objeto parseado de /cdn-cgi/trace
 const status = ref('loading') // 'loading' | 'ok' | 'error' | 'dev'
-const copied = ref(false)
 const conn = ref(null)       // navigator.connection
 const latency = ref(null)    // ms (mínimo medido)
 const localIps = ref(null)   // array | 'masked' | 'none' | null(no probado)
 const detectingLocal = ref(false)
+const ip4remote = ref('')    // IPv4 leída del endpoint solo-IPv4 (ip4.dotrino.com)
+const copiedKey = ref('')
 
 // ¿Estamos en producción same-origin (subdominio .dotrino.com tras Cloudflare)?
 const isProdHost = computed(() => /(^|\.)dotrino\.com$/i.test(location.hostname))
 
-const ip = computed(() => (trace.value && trace.value.ip) || '')
-const isV6 = computed(() => ip.value.includes(':'))
-const ipFamily = computed(() => (ip.value ? (isV6.value ? t('ipv6') : t('ipv4')) : ''))
+// La IP del trace es la que usó tu navegador (IPv6 en dual-stack por Happy Eyeballs).
+const traceIp = computed(() => (trace.value && trace.value.ip) || '')
+// IPv6 = la del trace si es v6. IPv4 = la del endpoint solo-IPv4, o la del trace si fue v4.
+const v6 = computed(() => (traceIp.value.includes(':') ? traceIp.value : ''))
+const v4 = computed(() => ip4remote.value || (traceIp.value && !traceIp.value.includes(':') ? traceIp.value : ''))
+const ips = computed(() => {
+  const out = []
+  if (v4.value) out.push({ key: 'v4', fam: t('ipv4'), value: v4.value })
+  if (v6.value) out.push({ key: 'v6', fam: t('ipv6'), value: v6.value })
+  return out
+})
 
 const countryName = computed(() => {
   const code = trace.value && trace.value.loc
@@ -65,6 +74,23 @@ async function loadTrace () {
   }
 }
 
+// ---------- IPv4 (endpoint solo-IPv4 de Dotrino: ip4.dotrino.com) ----------
+// El navegador prefiere IPv6, así que el trace suele dar solo IPv6. Para la IPv4
+// pública hay que pedirla a un host que SOLO tenga registro A (fuerza IPv4). El
+// endpoint devuelve la IP en texto plano con CORS; validamos que sea una IPv4
+// real (si el DNS aún no apunta al VPS o falta el cert, la respuesta no valida y
+// simplemente no se muestra la IPv4).
+const IP4_URL = 'https://ip4.dotrino.com/'
+async function loadIp4 () {
+  ip4remote.value = ''
+  try {
+    const res = await fetch(IP4_URL, { cache: 'no-store' })
+    if (!res.ok) return
+    const txt = (await res.text()).trim()
+    if (/^(\d{1,3}\.){3}\d{1,3}$/.test(txt)) ip4remote.value = txt
+  } catch { /* no alcanzable / sin cert / sin IPv4 */ }
+}
+
 // ---------- latencia (RTT mínimo contra un asset de mismo origen) ----------
 async function measureLatency () {
   latency.value = null
@@ -106,15 +132,18 @@ async function detectLocal () {
 }
 
 // ---------- acciones ----------
-async function copyIp () {
-  if (!ip.value) return
-  try { await navigator.clipboard.writeText(ip.value); copied.value = true; setTimeout(() => { copied.value = false }, 1400) }
-  catch { /* sin permiso de portapapeles */ }
+async function copyVal (item) {
+  try {
+    await navigator.clipboard.writeText(item.value)
+    copiedKey.value = item.key
+    setTimeout(() => { if (copiedKey.value === item.key) copiedKey.value = '' }, 1400)
+  } catch { /* sin permiso de portapapeles */ }
 }
-function refresh () { loadTrace(); measureLatency() }
+function refresh () { loadTrace(); loadIp4(); measureLatency() }
 
 onMounted(() => {
   loadTrace()
+  loadIp4()
   measureLatency()
   const c = navigator.connection || navigator.mozConnection || navigator.webkitConnection
   if (c) conn.value = c
@@ -152,18 +181,16 @@ onMounted(() => {
 
       <div v-if="status === 'loading'" class="ip-big muted" data-testid="ip">{{ t('loading') }}</div>
 
-      <template v-else-if="status === 'ok'">
-        <div class="ip-row">
-          <span class="ip-big" data-testid="ip">{{ ip }}</span>
-          <span class="fam-badge">{{ ipFamily }}</span>
-        </div>
-        <div class="hero-actions">
-          <button class="btn btn-primary" data-testid="copy" @click="copyIp">
+      <div v-else-if="status === 'ok'" class="ip-stack" data-testid="ip">
+        <div v-for="item in ips" :key="item.key" class="ip-line" :data-testid="'ip-' + item.key">
+          <span class="fam-badge">{{ item.fam }}</span>
+          <span class="ip-big">{{ item.value }}</span>
+          <button class="btn btn-ghost btn-copy" :data-testid="'copy-' + item.key" :aria-label="t('copy')" @click="copyVal(item)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V5a2 2 0 0 1 2-2h10" /></svg>
-            {{ copied ? t('copied') : t('copy') }}
+            {{ copiedKey === item.key ? t('copied') : t('copy') }}
           </button>
         </div>
-      </template>
+      </div>
 
       <div v-else class="ip-big muted err" data-testid="ip">
         {{ status === 'dev' ? t('ipErrorDev') : t('ipError') }}

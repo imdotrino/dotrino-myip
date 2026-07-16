@@ -108,6 +108,9 @@ body {
 }
 .hero-label { display: block; color: var(--text-faint); font-size: .82rem; text-transform: uppercase; letter-spacing: 1px; }
 .ip-row { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin: 10px 0 4px; }
+.ip-stack { display: flex; flex-direction: column; gap: 14px; margin-top: 14px; }
+.ip-line { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+.btn-copy { padding: 6px 12px; font-size: .8rem; }
 .ip-big {
   font-family: ui-monospace, "SF Mono", "Cascadia Code", monospace;
   font-size: clamp(1.5rem, 6vw, 2.6rem);
