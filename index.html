@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Mi IP · Dotrino</title>
+  <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+
+  <meta name="theme-color" content="#0e1116" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Mi IP" />
+
+  <meta name="description" content="Descubre tu IP pública y los datos de tu conexión (país, cifrado, latencia, red local) al instante. Sin anuncios, sin cookies, sin rastreo." />
+  <link rel="canonical" href="https://myip.dotrino.com/" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="es_ES" />
+  <meta property="og:site_name" content="Dotrino" />
+  <meta property="og:title" content="Mi IP" />
+  <meta property="og:description" content="Tu IP pública y los datos de tu conexión al instante. Sin anuncios ni rastreo." />
+  <meta property="og:url" content="https://myip.dotrino.com/" />
+  <meta property="og:image" content="https://myip.dotrino.com/og.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Mi IP" />
+  <meta name="twitter:description" content="Tu IP pública y los datos de tu conexión al instante." />
+  <meta name="twitter:image" content="https://myip.dotrino.com/og.jpg" />
+
+  <!-- Analítica cookieless autohosteada (GoatCounter); no cuenta en localhost/LAN. -->
+  <script>window.goatcounter={path:function(p){return location.hostname+p}}</script>
+  <script data-goatcounter="https://goat.dotrino.com/count" async src="https://goat.dotrino.com/count.js"></script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Mi IP",
+    "url": "https://myip.dotrino.com/",
+    "description": "Descubre tu IP pública y los datos de tu conexión (país, cifrado, latencia, red local) al instante, sin anuncios ni rastreo.",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Web",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "publisher": { "@type": "Organization", "name": "Dotrino", "url": "https://dotrino.com/" }
+  }
+  </script>
+</head>
+<body>
+  <dotrino-support floating href="https://ko-fi.com/dotrino" repo="imdotrino/dotrino-myip" discord="https://discord.gg/D648uq7cth"></dotrino-support>
+  <div id="app"></div>
+  <script type="module" src="/src/main.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@dotrino/support@0.7/src/index.js"></script>
+</body>
+</html>

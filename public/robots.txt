@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://myip.dotrino.com/sitemap.xml
