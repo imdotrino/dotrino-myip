@@ -226,12 +226,6 @@ onMounted(() => {
       <p v-else-if="localIps === 'none'" class="panel-note">{{ t('localNone') }}</p>
     </section>
 
-    <!-- LOS SALTOS: nota honesta -->
-    <section class="panel">
-      <h2>{{ t('hopsTitle') }}</h2>
-      <p class="panel-hint" v-html="t('hopsBody')"></p>
-    </section>
-
     <p class="privacy">{{ t('privacyNote') }}</p>
   </main>
 </template>

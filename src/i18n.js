@@ -39,8 +39,6 @@ const messages = {
     detecting: 'Detectando…',
     localMasked: 'Tu navegador oculta la dirección local por privacidad (nombre .local).',
     localNone: 'No se detectaron direcciones locales.',
-    hopsTitle: 'Los saltos (traceroute)',
-    hopsBody: 'Un traceroute real —ver salto por salto el camino de tu conexión— necesita permisos de red que el navegador no concede a ninguna página web. Para verlos, usa una herramienta en tu propio equipo (por ejemplo el comando <code>tracert</code> en Windows o <code>traceroute</code> en Linux/Mac). Aquí te mostramos lo que el navegador sí puede saber con seguridad y sin rastrearte.',
     privacyNote: 'Todo se calcula al momento, contra la propia infraestructura de Dotrino. No guardamos tu IP ni la enviamos a terceros.',
   },
   en: {
@@ -76,8 +74,6 @@ const messages = {
     detecting: 'Detecting…',
     localMasked: 'Your browser hides the local address for privacy (.local name).',
     localNone: 'No local addresses detected.',
-    hopsTitle: 'The hops (traceroute)',
-    hopsBody: 'A real traceroute —seeing your connection’s path hop by hop— needs network permissions that browsers grant to no web page. To see them, use a tool on your own device (for example <code>tracert</code> on Windows or <code>traceroute</code> on Linux/Mac). Here we show what the browser can safely know without tracking you.',
     privacyNote: 'Everything is computed on the spot, against Dotrino’s own infrastructure. We don’t store your IP or send it to third parties.',
   },
 }
