@@ -3,9 +3,8 @@ import App from './App.vue'
 import './style.css'
 
 // Web Components compartidos del ecosistema (custom elements, no Vue):
-// instalar PWA. El support se carga por CDN (@0.7) desde index.html.
+// instalar PWA. El topbar (App.vue) trae support, perfil y el "volver".
 import '@dotrino/install'
-import { createBackNav } from '@dotrino/nav'
 import { registerSW } from 'virtual:pwa-register'
 
 // SW con auto-actualización REAL: recarga al tomar control el SW nuevo y
@@ -18,8 +17,8 @@ registerSW({
   },
 })
 
-// Navegación "volver" unificada (botón físico Android / gesto iOS / atrás del
-// navegador → cierra modal; si no hay nada → dotrino.com).
-createBackNav()
+// La navegación "volver" unificada (botón físico Android / gesto iOS / atrás del
+// navegador) la instala el propio <dotrino-topbar> con su <dotrino-back>: no se
+// duplica aquí.
 
 createApp(App).mount('#app')

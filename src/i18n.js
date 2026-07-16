@@ -3,7 +3,11 @@
 // localStorage (preferencia de UI efímera, permitido por §4).
 import { ref, computed } from 'vue'
 
-const STORE_KEY = 'myip.lang'
+// Clave COMPARTIDA del ecosistema: es la que persiste <dotrino-topbar> desde su
+// toggle de idioma. Usando la misma, la app y el topbar no se pisan.
+const STORE_KEY = 'dotrino.lang'
+// Clave propia anterior, previa al topbar estándar.
+const LEGACY_KEY = 'myip.lang'
 
 const messages = {
   es: {
@@ -78,7 +82,19 @@ const messages = {
   },
 }
 
+// Migra UNA vez la preferencia vieja ('myip.lang') a la clave del ecosistema,
+// para no resetear el idioma de quien ya lo había elegido.
+function migrateLegacy () {
+  try {
+    if (localStorage.getItem(STORE_KEY)) return
+    const old = localStorage.getItem(LEGACY_KEY)
+    if (old === 'es' || old === 'en') localStorage.setItem(STORE_KEY, old)
+    localStorage.removeItem(LEGACY_KEY)
+  } catch { /* modo privado */ }
+}
+
 function detect () {
+  migrateLegacy()
   try {
     const saved = localStorage.getItem(STORE_KEY)
     if (saved === 'es' || saved === 'en') return saved

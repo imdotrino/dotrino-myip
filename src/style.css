@@ -24,26 +24,33 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* ---------- topbar ---------- */
+/* ---------- topbar (Web Component <dotrino-topbar>, §5) ----------
+   La barra entera (volver, idioma, perfil, moneda de support, fila móvil,
+   safe-area) la dibuja el componente compartido. Aquí solo van: su tema, el
+   sticky (el `.bar` del componente no lo es) y el estilo de lo que la app le
+   pasa por slot (marca y acciones), que vive en LIGHT DOM. */
 .topbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  /* Right padding reserva espacio para la moneda flotante de <dotrino-support>. */
-  padding: calc(env(safe-area-inset-top) + 12px) clamp(58px, 14vw, 72px) 12px clamp(14px, 4vw, 28px);
-  border-bottom: 1px solid var(--border);
-  background: rgba(14, 17, 22, 0.85);
-  backdrop-filter: blur(8px);
   position: sticky;
   top: 0;
   z-index: 20;
+  --dotrino-topbar-bg: rgba(14, 17, 22, 0.85);
+  --dotrino-topbar-border: var(--border);
+  --dotrino-topbar-text: var(--text);
+  --dotrino-topbar-muted: var(--text-faint);
+  --dotrino-topbar-accent: var(--accent);
+  /* El acento es cian claro: el texto encima va oscuro. */
+  --dotrino-topbar-accent-text: #08262b;
 }
+.topbar::part(profile) { width: 34px; height: 34px; }
+
+/* Marca y acciones: slots de la app (light DOM), no ::part. */
 .brand { display: flex; align-items: center; gap: 10px; user-select: none; }
 .brand img { width: 30px; height: 30px; display: block; }
 .brand b { font-size: 1.15rem; letter-spacing: .2px; }
 .brand span { color: var(--text-faint); font-size: .82rem; }
-.topbar-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+/* Envuelve install + actualizar en UN item del slot: el `.actions` del topbar es
+   row-reverse, así que sin este contenedor se invertiría su orden. */
+.topbar-actions { display: flex; align-items: center; gap: 8px; }
 
 /* ---------- botones ---------- */
 .btn {
@@ -69,24 +76,6 @@ body {
 .btn-ghost { background: transparent; }
 .btn-primary { background: var(--accent); color: #08262b; border-color: var(--accent); }
 .btn-primary:hover { background: var(--accent-2); border-color: var(--accent-2); }
-
-.lang-selector {
-  display: inline-flex;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  overflow: hidden;
-}
-.lang-selector button {
-  border: 0;
-  background: transparent;
-  color: var(--text-faint);
-  font: inherit;
-  font-size: .8rem;
-  font-weight: 700;
-  padding: 7px 11px;
-  cursor: pointer;
-}
-.lang-selector button.on { background: var(--accent); color: #08262b; }
 
 /* ---------- layout ---------- */
 .wrap {
@@ -180,8 +169,9 @@ body {
 
 .privacy { color: var(--muted); font-size: .8rem; line-height: 1.5; text-align: center; margin: 4px 0 0; }
 
-/* ---------- móvil: acciones a segunda fila ---------- */
+/* ---------- móvil ----------
+   La segunda fila de acciones la resuelve el propio <dotrino-topbar> (envuelve
+   sus items uno a uno). Aquí solo se oculta el lema para que la marca quepa. */
 @media (max-width: 560px) {
-  .topbar-actions { flex-basis: 100%; justify-content: flex-end; order: 2; }
   .brand span { display: none; }
 }

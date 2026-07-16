@@ -1,7 +1,44 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watchEffect } from 'vue'
 import { lang, setLang, t } from '@/i18n.js'
 import iconUrl from '/icon.svg'
+// Barra superior estándar del ecosistema: marca + volver + idioma + perfil +
+// moneda de support en UN componente (CONVENCIONES §5). No se re-arma a mano.
+import '@dotrino/topbar'
+import { getIdentity } from '@/services/identity.js'
+import { getReputation } from '@/services/reputation.js'
+
+// ---------- identidad (para el botón de perfil del topbar, §6.1) ----------
+const topbarRef = ref(null)
+const identityInst = ref(null)
+const reputationInst = ref(null)
+
+// Tema del modal de perfil (el topbar es su dueño), acorde al oscuro de Mi IP.
+const profileTheme = {
+  '--ccp-bg': '#0e1116', '--ccp-bg-2': '#161b22', '--ccp-bg-3': '#1a212b', '--ccp-bg-4': '#232c38',
+  '--ccp-border': '#232c38', '--ccp-text': '#e6edf3', '--ccp-muted': '#9aa7b4',
+  '--ccp-accent': '#31d0e6', '--ccp-accent-2': '#7ee0ee', '--ccp-accent-text': '#08262b',
+  '--ccp-gold': '#d4a72c', '--ccp-derived': '#9aa7b4',
+  '--ccp-online': '#3fb950', '--ccp-affinity': '#2dd4bf', '--ccp-input-bg': '#161b22',
+  '--ccp-radius': '16px',
+  '--ccp-font': 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
+  '--ccp-font-mono': 'ui-monospace, "SF Mono", "Cascadia Code", monospace',
+}
+
+// identity/reputation/tema son PROPIEDADES JS del Web Component (no atributos).
+watchEffect(() => {
+  const tb = topbarRef.value
+  if (!tb) return
+  tb.identity = identityInst.value ?? null
+  tb.reputation = reputationInst.value ?? null
+  tb.profileTheme = profileTheme
+})
+
+// El topbar es la fuente de verdad del idioma (persiste en 'dotrino.lang').
+function onLang (e) {
+  const l = e?.detail?.lang
+  if (l === 'es' || l === 'en') setLang(l)
+}
 
 // ---------- estado ----------
 const trace = ref(null)      // objeto parseado de /cdn-cgi/trace
@@ -147,24 +184,44 @@ async function copyVal (item) {
 }
 function refresh () { loadTrace(); loadIp4(); loadIp6(); measureLatency() }
 
-onMounted(() => {
+onMounted(async () => {
   loadTrace()
   loadIp4()
   loadIp6()
   measureLatency()
   const c = navigator.connection || navigator.mozConnection || navigator.webkitConnection
   if (c) conn.value = c
+
+  // Identidad del vault: alimenta el botón/tarjeta de perfil del topbar. Si el
+  // vault no responde, el topbar simplemente no abre el perfil: la app sigue
+  // funcionando igual (la IP no depende de la identidad).
+  identityInst.value = await getIdentity()
+  if (identityInst.value) {
+    try { reputationInst.value = await getReputation() } catch (_) { /* sin reputación */ }
+  }
 })
 </script>
 
 <template>
-  <header class="topbar">
-    <div class="brand">
+  <!-- Barra superior estándar del ecosistema (§5): trae volver, idioma, perfil
+       y la moneda de support. La app solo aporta su marca y sus acciones. -->
+  <dotrino-topbar
+    ref="topbarRef"
+    class="topbar"
+    brand-href="./"
+    :lang="lang"
+    profile
+    support-href="https://ko-fi.com/dotrino"
+    support-repo="imdotrino/dotrino-myip"
+    support-discord="https://discord.gg/D648uq7cth"
+    @dotrino-lang="onLang"
+  >
+    <span slot="brand" class="brand">
       <img :src="iconUrl" alt="" />
       <b>{{ t('appName') }}</b>
       <span>· {{ t('tagline') }}</span>
-    </div>
-    <div class="topbar-actions">
+    </span>
+    <div slot="end" class="topbar-actions">
       <dotrino-install
         class="install-btn"
         :lang="lang"
@@ -174,12 +231,8 @@ onMounted(() => {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6" /></svg>
         {{ t('refresh') }}
       </button>
-      <div class="lang-selector" role="group" aria-label="es / en">
-        <button :class="{ on: lang === 'es' }" @click="setLang('es')">ES</button>
-        <button :class="{ on: lang === 'en' }" @click="setLang('en')">EN</button>
-      </div>
     </div>
-  </header>
+  </dotrino-topbar>
 
   <main class="wrap">
     <!-- HÉROE: la IP pública -->
