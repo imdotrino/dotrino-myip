@@ -10,7 +10,8 @@ const conn = ref(null)       // navigator.connection
 const latency = ref(null)    // ms (mínimo medido)
 const localIps = ref(null)   // array | 'masked' | 'none' | null(no probado)
 const detectingLocal = ref(false)
-const ip4remote = ref('')    // IPv4 leída del endpoint solo-IPv4 (ip4.dotrino.com)
+const ip4remote = ref('')    // IPv4 leída del endpoint solo-IPv4 (ipv4.dotrino.com)
+const ip6remote = ref('')    // IPv6 leída del endpoint solo-IPv6 (ipv6.dotrino.com)
 const copiedKey = ref('')
 
 // ¿Estamos en producción same-origin (subdominio .dotrino.com tras Cloudflare)?
@@ -19,8 +20,8 @@ const isProdHost = computed(() => /(^|\.)dotrino\.com$/i.test(location.hostname)
 // La IP del trace es la que usó tu navegador (IPv6 en dual-stack por Happy Eyeballs).
 const traceIp = computed(() => (trace.value && trace.value.ip) || '')
 // IPv6 = la del trace si es v6. IPv4 = la del endpoint solo-IPv4, o la del trace si fue v4.
-const v6 = computed(() => (traceIp.value.includes(':') ? traceIp.value : ''))
 const v4 = computed(() => ip4remote.value || (traceIp.value && !traceIp.value.includes(':') ? traceIp.value : ''))
+const v6 = computed(() => ip6remote.value || (traceIp.value.includes(':') ? traceIp.value : ''))
 const ips = computed(() => {
   const out = []
   if (v4.value) out.push({ key: 'v4', fam: t('ipv4'), value: v4.value })
@@ -74,22 +75,25 @@ async function loadTrace () {
   }
 }
 
-// ---------- IPv4 (endpoint solo-IPv4 de Dotrino: ip4.dotrino.com) ----------
-// El navegador prefiere IPv6, así que el trace suele dar solo IPv6. Para la IPv4
-// pública hay que pedirla a un host que SOLO tenga registro A (fuerza IPv4). El
-// endpoint devuelve la IP en texto plano con CORS; validamos que sea una IPv4
-// real (si el DNS aún no apunta al VPS o falta el cert, la respuesta no valida y
-// simplemente no se muestra la IPv4).
-const IP4_URL = 'https://ip4.dotrino.com/'
-async function loadIp4 () {
-  ip4remote.value = ''
+// ---------- IPv4 / IPv6 explícitas (endpoints por familia de Dotrino) ----------
+// El navegador elige la familia (prefiere IPv6), así que el trace suele dar solo
+// una. Para tener AMBAS se pregunta a un host solo-IPv4 (ipv4.dotrino.com, solo
+// registro A → fuerza IPv4) y a uno solo-IPv6 (ipv6.dotrino.com, solo AAAA). Cada
+// endpoint devuelve la IP en texto plano con CORS. Si el cliente no tiene esa
+// familia (o el endpoint no responde), la petición falla y esa línea no se muestra.
+const IP4_URL = 'https://ipv4.dotrino.com/'
+const IP6_URL = 'https://ipv6.dotrino.com/'
+async function fetchIp (url, isV6) {
   try {
-    const res = await fetch(IP4_URL, { cache: 'no-store' })
-    if (!res.ok) return
+    const res = await fetch(url, { cache: 'no-store' })
+    if (!res.ok) return ''
     const txt = (await res.text()).trim()
-    if (/^(\d{1,3}\.){3}\d{1,3}$/.test(txt)) ip4remote.value = txt
-  } catch { /* no alcanzable / sin cert / sin IPv4 */ }
+    const ok = isV6 ? (txt.includes(':') && /^[0-9a-fA-F:]+$/.test(txt)) : /^(\d{1,3}\.){3}\d{1,3}$/.test(txt)
+    return ok ? txt : ''
+  } catch { return '' }
 }
+async function loadIp4 () { ip4remote.value = await fetchIp(IP4_URL, false) }
+async function loadIp6 () { ip6remote.value = await fetchIp(IP6_URL, true) }
 
 // ---------- latencia (RTT mínimo contra un asset de mismo origen) ----------
 async function measureLatency () {
@@ -139,11 +143,12 @@ async function copyVal (item) {
     setTimeout(() => { if (copiedKey.value === item.key) copiedKey.value = '' }, 1400)
   } catch { /* sin permiso de portapapeles */ }
 }
-function refresh () { loadTrace(); loadIp4(); measureLatency() }
+function refresh () { loadTrace(); loadIp4(); loadIp6(); measureLatency() }
 
 onMounted(() => {
   loadTrace()
   loadIp4()
+  loadIp6()
   measureLatency()
   const c = navigator.connection || navigator.mozConnection || navigator.webkitConnection
   if (c) conn.value = c
