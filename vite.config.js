@@ -4,6 +4,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 import basicSsl from '@vitejs/plugin-basic-ssl'
 import { execSync } from 'node:child_process'
 import { fileURLToPath, URL } from 'node:url'
+import prerender from '@dotrino/prerender/vite'
 
 // <meta name="commit"> con el hash del build: permite ver qué versión sirve el
 // dominio (Ver código fuente / document.querySelector) — clave para diagnosticar
@@ -24,6 +25,8 @@ export default defineConfig(({ command }) => ({
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },
   plugins: [
+    // El HTML llega con contenido para quien lo lee sin ejecutar JavaScript.
+    prerender(),
     // Los `dotrino-*` son Web Components (custom elements), no componentes Vue.
     vue({ template: { compilerOptions: { isCustomElement: (tag) => tag.startsWith('dotrino-') } } }),
     // HTTPS autofirmado en desarrollo (contexto seguro para portapapeles / WebRTC).
