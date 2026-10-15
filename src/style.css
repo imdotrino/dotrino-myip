@@ -1,25 +1,24 @@
 :root {
-  --bg: #0e1116;
-  --bg-elev: #161b22;
-  --bg-card: #1a212b;
-  --text: #e6edf3;
-  --text-faint: #9aa7b4;
-  --muted: #6b7784;
-  --accent: #31d0e6;
-  --accent-2: #7ee0ee;
-  --border: #232c38;
-  --danger: #ff6b6b;
-  --radius: 16px;
+  /* Colores del ecosistema (@dotrino/theme, CONVENCIONES §5). */
+  --bg: var(--dt-bg);
+  --bg-elev: var(--dt-surface);
+  --bg-card: var(--dt-surface-2);
+  --text: var(--dt-text);
+  --text-faint: var(--dt-text-dim);
+  --muted: var(--dt-text-faint);
+  --accent: var(--dt-accent);
+  --accent-2: var(--dt-accent-press);
+  --border: var(--dt-line-soft);
+  --danger: var(--dt-error);
+  --radius: var(--dt-radius);
 }
 
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
 body {
-  background:
-    radial-gradient(1100px 520px at 50% -10%, rgba(49, 208, 230, 0.10), transparent 60%),
-    var(--bg);
+  background: var(--bg);
   color: var(--text);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--dt-font);
   min-height: 100vh;
   -webkit-tap-highlight-color: transparent;
 }
@@ -33,13 +32,6 @@ body {
   position: sticky;
   top: 0;
   z-index: 20;
-  --dotrino-topbar-bg: rgba(14, 17, 22, 0.85);
-  --dotrino-topbar-border: var(--border);
-  --dotrino-topbar-text: var(--text);
-  --dotrino-topbar-muted: var(--text-faint);
-  --dotrino-topbar-accent: var(--accent);
-  /* El acento es cian claro: el texto encima va oscuro. */
-  --dotrino-topbar-accent-text: #08262b;
 }
 .topbar::part(profile) { width: 34px; height: 34px; }
 
@@ -74,7 +66,7 @@ body {
 .btn:disabled { opacity: .55; cursor: default; }
 .btn svg { width: 18px; height: 18px; }
 .btn-ghost { background: transparent; }
-.btn-primary { background: var(--accent); color: #08262b; border-color: var(--accent); }
+.btn-primary { background: var(--accent); color: var(--dt-accent-ink); border-color: var(--accent); }
 .btn-primary:hover { background: var(--accent-2); border-color: var(--accent-2); }
 
 /* ---------- layout ---------- */
@@ -93,7 +85,7 @@ body {
   padding: clamp(22px, 5vw, 38px) 18px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  background: linear-gradient(180deg, rgba(49, 208, 230, 0.08), var(--bg-elev));
+  background: linear-gradient(180deg, var(--dt-accent-tint), var(--bg-elev));
 }
 .hero-label { display: block; color: var(--text-faint); font-size: .82rem; text-transform: uppercase; letter-spacing: 1px; }
 .ip-row { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin: 10px 0 4px; }

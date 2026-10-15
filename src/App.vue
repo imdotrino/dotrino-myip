@@ -13,25 +13,12 @@ const topbarRef = ref(null)
 const identityInst = ref(null)
 const reputationInst = ref(null)
 
-// Tema del modal de perfil (el topbar es su dueño), acorde al oscuro de Mi IP.
-const profileTheme = {
-  '--ccp-bg': '#0e1116', '--ccp-bg-2': '#161b22', '--ccp-bg-3': '#1a212b', '--ccp-bg-4': '#232c38',
-  '--ccp-border': '#232c38', '--ccp-text': '#e6edf3', '--ccp-muted': '#9aa7b4',
-  '--ccp-accent': '#31d0e6', '--ccp-accent-2': '#7ee0ee', '--ccp-accent-text': '#08262b',
-  '--ccp-gold': '#d4a72c', '--ccp-derived': '#9aa7b4',
-  '--ccp-online': '#3fb950', '--ccp-affinity': '#2dd4bf', '--ccp-input-bg': '#161b22',
-  '--ccp-radius': '16px',
-  '--ccp-font': 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif',
-  '--ccp-font-mono': 'ui-monospace, "SF Mono", "Cascadia Code", monospace',
-}
-
-// identity/reputation/tema son PROPIEDADES JS del Web Component (no atributos).
+// identity/reputation son PROPIEDADES JS del Web Component (no atributos).
 watchEffect(() => {
   const tb = topbarRef.value
   if (!tb) return
   tb.identity = identityInst.value ?? null
   tb.reputation = reputationInst.value ?? null
-  tb.profileTheme = profileTheme
 })
 
 // El topbar es la fuente de verdad del idioma (persiste en 'dotrino.lang').
@@ -210,7 +197,7 @@ onMounted(async () => {
     class="topbar"
     brand-href="./"
     :lang="lang"
-    profile
+    profile theme
     support-href="https://ko-fi.com/dotrino"
     support-repo="imdotrino/dotrino-myip"
     support-discord="https://discord.gg/D648uq7cth"
