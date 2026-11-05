@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watchEffect } from 'vue'
+import { ref, shallowRef, computed, onMounted, watchEffect } from 'vue'
 import { lang, setLang, t } from '@/i18n.js'
 import iconUrl from '/icon.svg'
 // Barra superior estándar del ecosistema: marca + volver + idioma + perfil +
@@ -9,9 +9,14 @@ import { getIdentity } from '@/services/identity.js'
 import { getReputation } from '@/services/reputation.js'
 
 // ---------- identidad (para el botón de perfil del topbar, §6.1) ----------
+/** @type {import('vue').Ref<import('@dotrino/topbar').DotrinoTopbar | null>} */
 const topbarRef = ref(null)
-const identityInst = ref(null)
-const reputationInst = ref(null)
+// shallowRef y no ref: un ref envuelve la instancia en un Proxy reactivo, y el puente
+// con el iframe de la bóveda no sabe clonar un Proxy por postMessage.
+/** @type {import('vue').ShallowRef<import('@dotrino/identity').Identity | null>} */
+const identityInst = shallowRef(null)
+/** @type {import('vue').ShallowRef<import('@dotrino/reputation').VaultReputation | null>} */
+const reputationInst = shallowRef(null)
 
 // identity/reputation son PROPIEDADES JS del Web Component (no atributos).
 watchEffect(() => {
@@ -22,16 +27,23 @@ watchEffect(() => {
 })
 
 // El topbar es la fuente de verdad del idioma (persiste en 'dotrino.lang').
+/** @param {CustomEvent<{ lang?: string }>} e */
 function onLang (e) {
   const l = e?.detail?.lang
   if (l === 'es' || l === 'en') setLang(l)
 }
 
 // ---------- estado ----------
+/** @typedef {{ downlink?: number, effectiveType?: string, saveData?: boolean }} NetInfo  navigator.connection */
+/** @type {import('vue').Ref<Record<string, string> | null>} */
 const trace = ref(null)      // objeto parseado de /cdn-cgi/trace
-const status = ref('loading') // 'loading' | 'ok' | 'error' | 'dev'
+/** @type {import('vue').Ref<'loading' | 'ok' | 'error' | 'dev'>} */
+const status = ref('loading')
+/** @type {import('vue').Ref<NetInfo | null>} */
 const conn = ref(null)       // navigator.connection
+/** @type {import('vue').Ref<number | null>} */
 const latency = ref(null)    // ms (mínimo medido)
+/** @type {import('vue').Ref<string[] | 'masked' | 'none' | null>} */
 const localIps = ref(null)   // array | 'masked' | 'none' | null(no probado)
 const detectingLocal = ref(false)
 const ip4remote = ref('')    // IPv4 leída del endpoint solo-IPv4 (ipv4.dotrino.com)
@@ -86,6 +98,7 @@ async function loadTrace () {
     const res = await fetch('/cdn-cgi/trace', { cache: 'no-store' })
     if (!res.ok) throw new Error('http ' + res.status)
     const text = await res.text()
+    /** @type {Record<string, string>} */
     const obj = {}
     text.trim().split('\n').forEach((line) => {
       const i = line.indexOf('=')
@@ -107,6 +120,11 @@ async function loadTrace () {
 // familia (o el endpoint no responde), la petición falla y esa línea no se muestra.
 const IP4_URL = 'https://ipv4.dotrino.com/'
 const IP6_URL = 'https://ipv6.dotrino.com/'
+/**
+ * @param {string} url
+ * @param {boolean} isV6
+ * @returns {Promise<string>}
+ */
 async function fetchIp (url, isV6) {
   try {
     const res = await fetch(url, { cache: 'no-store' })
@@ -162,6 +180,7 @@ async function detectLocal () {
 }
 
 // ---------- acciones ----------
+/** @param {{ key: string, value: string }} item */
 async function copyVal (item) {
   try {
     await navigator.clipboard.writeText(item.value)
@@ -176,7 +195,8 @@ onMounted(async () => {
   loadIp4()
   loadIp6()
   measureLatency()
-  const c = navigator.connection || navigator.mozConnection || navigator.webkitConnection
+  const nav = /** @type {Navigator & { connection?: NetInfo, mozConnection?: NetInfo, webkitConnection?: NetInfo }} */ (navigator)
+  const c = nav.connection || nav.mozConnection || nav.webkitConnection
   if (c) conn.value = c
 
   // Identidad del vault: alimenta el botón/tarjeta de perfil del topbar. Si el
@@ -250,7 +270,7 @@ onMounted(async () => {
         <span class="card-k">{{ t('country') }}</span>
         <span class="card-v">{{ flag }} {{ countryName }}</span>
       </div>
-      <div v-if="trace.colo" class="card">
+      <div v-if="trace?.colo" class="card">
         <span class="card-k">{{ t('entryPoint') }}</span>
         <span class="card-v">{{ trace.colo }}</span>
         <span class="card-hint">{{ t('entryHint') }}</span>

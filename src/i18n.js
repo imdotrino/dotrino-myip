@@ -93,6 +93,7 @@ function migrateLegacy () {
   } catch { /* modo privado */ }
 }
 
+/** @returns {'es'|'en'} */
 function detect () {
   migrateLegacy()
   try {
@@ -104,6 +105,7 @@ function detect () {
 
 export const lang = ref(detect())
 
+/** @param {'es'|'en'} l */
 export function setLang (l) {
   lang.value = l
   try { localStorage.setItem(STORE_KEY, l) } catch { /* modo privado */ }
@@ -112,15 +114,22 @@ export function setLang (l) {
 
 document.documentElement.lang = lang.value
 
+/**
+ * The text at `key` (`a.b.c`), or the key itself when there is none.
+ *
+ * @param {string} key
+ * @returns {string}
+ */
 export function t (key) {
   const parts = key.split('.')
+  /** @type {unknown} */
   let node = messages[lang.value]
-  for (const p of parts) node = node && node[p]
-  return node == null ? key : node
+  for (const p of parts) node = node && /** @type {Record<string, unknown>} */ (node)[p]
+  return node == null ? key : /** @type {string} */ (node)
 }
 
 // Helper reactivo para plantillas (`tt.value('...')` fuerza reactividad).
-export const tt = computed(() => (key) => {
+export const tt = computed(() => (/** @type {string} */ key) => {
   void lang.value
   return t(key)
 })
